@@ -36,33 +36,33 @@ fun main(args: Array<String>) {
                     min(s.location.x + yDelta, B_MAX)
                 )
             } else null
-        }.filter { it.first <= it.second }
+        }.filter {
+            it.first <= it.second
+        }.toMutableList()
 
-        val notIn = (intervals.minOf { it.first }..intervals.maxOf { it.second }).associateWith {
-            '.'
-        }.toMutableMap()
-
-        intervals.forEach {
-            (it.first..it.second).forEach { j ->
-                notIn[j] = '#'
+        listOf(sensors.map { it.location }, sensors.map { it.beacon }).flatten().forEach { xy ->
+            if (xy.y == row && 0 <= xy.x && xy.x <= B_MAX){
+                intervals.add(Pair(xy.x, xy.x))
             }
         }
 
-        sensors.forEach {
-            if (it.location.x in notIn.keys && it.location.y == row) {
-                notIn[it.location.x] = 'S'
-            }
-            if (it.beacon.x in notIn.keys && it.beacon.y == row) {
-                notIn[it.beacon.x] = 'B'
+        intervals.sortWith{l, r ->
+            if (l.first == r.first) {
+                l.second.compareTo(r.second)
+            } else {
+                l.first.compareTo(r.first)
             }
         }
 
-        val possible = notIn.filter { it.value == '.' }
-        if (possible.isNotEmpty()){
-            val tX = possible.keys.first()
-            println("$tX, $row")
-            println(tX * 4000000 + row)
-            return
+        var tX = intervals.first().second
+
+        intervals.drop(1).forEach { i ->
+            if (tX+1 < i.first){
+                println("${tX+1}, $row")
+                println((tX+1).toLong() * 4000000 + row)
+                return
+            }
+            tX = max(i.second, tX)
         }
     }
 }
